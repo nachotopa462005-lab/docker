@@ -1,0 +1,20 @@
+# Volumen nombrado vs Bind Mount en Docker
+
+## ¿Cuándo conviene usar un volumen nombrado?
+
+Un **volumen nombrado** es la opción recomendada en la mayoría de casos en Docker, especialmente en producción.
+
+Conviene usarlo cuando:
+
+- Se quiere **persistencia de datos independiente del sistema operativo**
+- No es necesario acceder directamente a los archivos desde el host
+- Se busca una solución **más segura y gestionada por Docker**
+- Se quiere mantener los datos aunque el contenedor se elimine o recree
+- Se desea mayor portabilidad entre entornos (Linux, Windows, Mac)
+
+Ejemplo:
+
+```bash
+docker volume create inventario-data
+
+docker run -v inventario-data:/app/data python-api

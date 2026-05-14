@@ -1,16 +1,37 @@
 from fastapi import FastAPI
+import json
+import os
 
 app = FastAPI()
 
-inventario = [
-    {"id": 1, "producto": "Teclado", "stock": 10},
-    {"id": 2, "producto": "Mouse", "stock": 5}
-]
+FILE_PATH = "data/inventario.json"
+
+os.makedirs("data", exist_ok=True)
+
+if not os.path.exists(FILE_PATH):
+    with open(FILE_PATH, "w") as f:
+        json.dump([], f)
+
 
 @app.get("/status")
 def status():
-    return {"estado": "API funcifuncionando de lujo"}
+    return {"estado": "API funcionando"}
+
 
 @app.get("/inventario")
-def inventario_endpoint():
-    return inventario
+def get_inventario():
+    with open(FILE_PATH, "r") as f:
+        return json.load(f)
+
+
+@app.post("/inventario")
+def add_item(item: dict):
+    with open(FILE_PATH, "r") as f:
+        data = json.load(f)
+
+    data.append(item)
+
+    with open(FILE_PATH, "w") as f:
+        json.dump(data, f)
+
+    return {"mensaje": "item agregado", "item": item}
