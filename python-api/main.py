@@ -9,7 +9,7 @@ inventario = [
 
 @app.get("/status")
 def status():
-    return {"estado": "API funcionando"}
+    return {"estado": "API funcifuncionando de lujo"}
 
 @app.get("/inventario")
 def inventario_endpoint():
