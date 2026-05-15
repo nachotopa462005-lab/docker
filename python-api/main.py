@@ -1,16 +1,24 @@
 from fastapi import FastAPI
-import json
+import redis
 import os
 
 app = FastAPI()
 
-FILE_PATH = "data/inventario.json"
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = 6379
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "1234")
 
-os.makedirs("data", exist_ok=True)
+r = redis.Redis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    password=REDIS_PASSWORD,
+    decode_responses=True
+)
 
-if not os.path.exists(FILE_PATH):
-    with open(FILE_PATH, "w") as f:
-        json.dump([], f)
+inventario = [
+    {"id": 1, "producto": "Teclado", "stock": 10},
+    {"id": 2, "producto": "Mouse", "stock": 5}
+]
 
 
 @app.get("/status")
@@ -20,18 +28,10 @@ def status():
 
 @app.get("/inventario")
 def get_inventario():
-    with open(FILE_PATH, "r") as f:
-        return json.load(f)
+    return inventario
 
 
-@app.post("/inventario")
-def add_item(item: dict):
-    with open(FILE_PATH, "r") as f:
-        data = json.load(f)
-
-    data.append(item)
-
-    with open(FILE_PATH, "w") as f:
-        json.dump(data, f)
-
-    return {"mensaje": "item agregado", "item": item}
+@app.get("/redis")
+def redis_test():
+    r.set("mensaje", "Redis funcionando")
+    return {"redis": r.get("mensaje")}
