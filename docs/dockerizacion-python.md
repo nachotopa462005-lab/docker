@@ -1,28 +1,70 @@
-# Dockerización de Python con fast API
+# Dockerizacion de Python con FastAPI
 
-## 1. API REST con FastAPI
+## API REST con FastAPI
 
-Para este proyecto se creó una pequeña API REST utilizando FastAPI, que expone dos endpoints principales:
+En este proyecto se creo una API pequena con FastAPI. La API expone endpoints para comprobar el estado del servicio, consultar inventario, usar cache con Redis y guardar IPs sospechosas.
 
-- `/status`: devuelve el estado de la API
-- `/inventario`: devuelve una lista de productos en inventario
+Endpoints principales:
 
-Ejemplo de código:
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/status` | Comprueba que la API funciona |
+| GET | `/inventario` | Devuelve productos de ejemplo |
+| GET | `/cache` | Consulta datos cacheados en Redis |
+| POST | `/ips/{ip}` | Agrega una IP sospechosa a Redis |
+| GET | `/ips` | Lista las IPs guardadas |
+
+## Dockerfile
+
+El backend se construye con una imagen `python:3.11-alpine`.
+
+```dockerfile
+FROM python:3.11-alpine
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
+```
+
+La idea es:
+
+1. Usar una base ligera de Python.
+2. Copiar dependencias.
+3. Instalar FastAPI, Uvicorn y Redis.
+4. Copiar el codigo.
+5. Ejecutar la API en el puerto `5000`.
+
+## Variables de entorno
+
+La API lee la configuracion de Redis desde variables de entorno:
 
 ```python
-from fastapi import FastAPI
+REDIS_HOST = os.getenv("REDIS_HOST", "redis")
+REDIS_PORT = os.getenv("REDIS_PORT", 6379)
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+```
 
-app = FastAPI()
+Esto permite cambiar la configuracion sin modificar el codigo.
 
-inventario = [
-    {"id": 1, "producto": "Teclado", "stock": 10},
-    {"id": 2, "producto": "Mouse", "stock": 5}
-]
+## Ejecucion con Docker Compose
 
-@app.get("/status")
-def status():
-    return {"estado": "API funcionando"}
+Para levantar el proyecto:
 
-@app.get("/inventario")
-def get_inventario():
-    return inventario
+```bash
+cd python-api
+cp .env.example .env
+docker compose up -d --build
+```
+
+Luego se puede probar:
+
+```bash
+curl -k https://localhost:4443/status
+```

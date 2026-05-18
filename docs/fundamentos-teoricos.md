@@ -1,130 +1,94 @@
-# Fundamentos teóricos: imágenes por capas y Dockerfile
+# Fundamentos teoricos: imagenes por capas y Dockerfile
 
 ## Sistema de capas en Docker
 
-Docker utiliza un sistema de capas (layers). Cada instrucción dentro de un Dockerfile crea una nueva capa.
+Docker construye las imagenes por capas. Cada instruccion del Dockerfile crea una capa nueva.
 
 Ejemplo:
 
 ```dockerfile
-FROM node:20-alpine
+FROM python:3.11-alpine
 WORKDIR /app
-COPY package.json .
-RUN npm install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 ```
 
-Docker guarda estas capas en cache para reutilizarlas y acelerar los builds.
+Docker guarda estas capas en cache. Si una capa no cambia, Docker puede reutilizarla y el build tarda menos.
 
-El orden de las instrucciones es importante porque si una capa cambia, Docker vuelve a construir las siguientes.
-
-Por ejemplo:
-
-```dockerfile
-COPY package.json .
-RUN npm install
-COPY . .
-```
-
-Es mejor que copiar todo primero, porque así `npm install` solo se ejecuta si cambian las dependencias.
+Por eso conviene copiar primero `requirements.txt`, instalar dependencias y despues copiar el resto del codigo. Asi, si solo cambia el codigo, no hace falta reinstalar todas las dependencias.
 
 ---
 
-# Instrucciones importantes del Dockerfile
+## Instrucciones importantes del Dockerfile
 
-## FROM
+### FROM
 
 Define la imagen base.
 
 ```dockerfile
-FROM node:20-alpine
+FROM python:3.11-alpine
 ```
 
----
+### WORKDIR
 
-## WORKDIR
-
-Define el directorio de trabajo.
+Define la carpeta de trabajo dentro del contenedor.
 
 ```dockerfile
 WORKDIR /app
 ```
 
----
+### COPY
 
-## COPY
-
-Copia archivos al contenedor.
+Copia archivos desde el proyecto hacia la imagen.
 
 ```dockerfile
 COPY . .
 ```
 
----
+### ADD
 
-## ADD
+Tambien copia archivos, pero ademas puede descomprimir archivos o descargar contenido desde una URL. Normalmente se recomienda usar `COPY` si no se necesita esa funcion extra.
 
-Parecido a `COPY`, pero también puede descomprimir archivos o descargar desde URLs.
+### RUN
 
-```dockerfile
-ADD archivo.tar.gz /app
-```
-
----
-
-## RUN
-
-Ejecuta comandos durante el build.
+Ejecuta comandos durante la construccion de la imagen.
 
 ```dockerfile
-RUN npm install
+RUN pip install --no-cache-dir -r requirements.txt
 ```
 
----
+### ENV
 
-## ENV
-
-Define variables de entorno.
+Define variables de entorno dentro de la imagen.
 
 ```dockerfile
-ENV PORT=3000
+ENV PORT=5000
 ```
 
----
+### EXPOSE
 
-## EXPOSE
-
-Indica el puerto que usa la aplicación.
+Documenta el puerto que usa la aplicacion.
 
 ```dockerfile
-EXPOSE 3000
+EXPOSE 5000
 ```
 
----
+### CMD
 
-## CMD
-
-Define el comando por defecto del contenedor.
+Define el comando por defecto que se ejecuta al iniciar el contenedor.
 
 ```dockerfile
-CMD ["npm", "start"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000"]
 ```
 
----
+### ENTRYPOINT
 
-## ENTRYPOINT
+Define el ejecutable principal del contenedor. Se usa cuando se quiere que el contenedor siempre arranque con un comando fijo.
 
-Define el ejecutable principal.
+### ARG
 
-```dockerfile
-ENTRYPOINT ["node", "server.js"]
-```
-
----
-
-## ARG
-
-Variables disponibles solo durante el build.
+Define variables disponibles solo durante el build.
 
 ```dockerfile
 ARG VERSION=1.0
@@ -132,44 +96,23 @@ ARG VERSION=1.0
 
 ---
 
-# Diferencia entre CMD y ENTRYPOINT
+## Diferencia entre CMD y ENTRYPOINT
 
-- `CMD` define comandos por defecto y puede reemplazarse fácilmente.
-- `ENTRYPOINT` define el proceso principal del contenedor.
+`CMD` indica el comando por defecto y se puede reemplazar facilmente al ejecutar el contenedor.
 
-También pueden usarse juntos:
-
-```dockerfile
-ENTRYPOINT ["python"]
-CMD ["app.py"]
-```
+`ENTRYPOINT` fija el ejecutable principal. Se suele usar cuando el contenedor funciona como una herramienta o comando.
 
 ---
 
-# Imagen base Alpine
+## Imagen base Alpine
 
-Alpine Linux es una distribución muy liviana y pequeña usada mucho en Docker.
+Alpine Linux es una distribucion muy liviana. En este proyecto se usa `python:3.11-alpine` para que la imagen sea mas pequena y rapida de descargar.
 
-Ejemplo:
+Ventajas:
 
-```dockerfile
-FROM node:20-alpine
-```
+- Ocupa menos espacio.
+- Tiene menos paquetes instalados.
+- Reduce superficie de ataque.
+- Hace que el contenedor sea mas ligero.
 
-Se prefiere frente a Ubuntu o Debian porque:
-
-- ocupa menos espacio
-- descarga más rápido
-- consume menos recursos
-- tiene menos vulnerabilidades
-
-La desventaja es que algunas librerías pueden no ser compatibles.
-
----
-
-# Conclusión
-
-Docker usa capas para optimizar los builds y el almacenamiento.  
-El Dockerfile permite configurar cómo se construye y ejecuta un contenedor mediante instrucciones como `FROM`, `COPY`, `RUN` y `CMD`.
-
-Además, Alpine es muy utilizada porque es más ligera y eficiente que otras imágenes base.
+Desventaja: algunas librerias pueden requerir paquetes extra para compilar o funcionar.

@@ -1,131 +1,95 @@
-# Teoría de Docker
+# Teoria de Docker
 
-## Diferencia entre una máquina virtual y un contenedor Docker
+## Diferencia entre una maquina virtual y un contenedor Docker
 
-### Máquina virtual (VM)
+Una maquina virtual emula un equipo completo. Incluye su propio sistema operativo, librerias y recursos asignados. Por eso suele consumir mas memoria, CPU y almacenamiento.
 
-Una máquina virtual emula un computador completo mediante un hipervisor. Cada VM incluye:
+Un contenedor Docker es mas liviano porque comparte el kernel del sistema operativo del host. Dentro del contenedor solo se empaqueta la aplicacion y sus dependencias.
 
-- Un sistema operativo completo.
-- Sus propias librerías y dependencias.
-- Aplicaciones instaladas sobre ese sistema operativo.
+En resumen:
 
-Las máquinas virtuales consumen más recursos porque cada una necesita memoria, CPU y almacenamiento para su sistema operativo independiente.
+| Maquina virtual | Contenedor Docker |
+|-----------------|-------------------|
+| Tiene sistema operativo completo | Comparte el kernel del host |
+| Es mas pesada | Es mas liviano |
+| Tarda mas en iniciar | Inicia rapido |
+| Usa mas recursos | Usa menos recursos |
 
-### Contenedor Docker
+## Que recursos comparte el contenedor con el host
 
-Un contenedor Docker es una forma ligera de virtualización a nivel de sistema operativo. En lugar de incluir un sistema operativo completo, los contenedores:
+Un contenedor comparte con el host:
 
-- Comparten el kernel del sistema operativo del host.
-- Aíslan procesos, red y sistema de archivos.
-- Incluyen únicamente las dependencias necesarias para la aplicación.
+- Kernel del sistema operativo.
+- CPU.
+- Memoria RAM.
+- Disco.
+- Red, aunque Docker la organiza con redes virtuales.
 
-Esto hace que los contenedores sean mucho más rápidos y ligeros que las máquinas virtuales.
+Aunque comparta recursos, Docker mantiene cada contenedor aislado para que una aplicacion no interfiera directamente con otra.
 
-## ¿Qué recursos comparte el contenedor con el host?
+## Que aisla un contenedor
 
-Los contenedores Docker comparten principalmente:
-
-- El kernel del sistema operativo del host.
-- Recursos físicos como CPU, memoria y disco.
-- Interfaces de red del host (virtualizadas mediante namespaces).
-
-## ¿Qué aísla un contenedor?
-
-Docker utiliza mecanismos del kernel Linux para aislar:
+Docker aisla:
 
 - Procesos.
 - Sistema de archivos.
 - Red.
-- Usuarios.
-- Recursos de CPU y memoria.
+- Variables de entorno.
+- Usuarios y permisos.
+- Uso de CPU y memoria.
 
-Este aislamiento se logra mediante tecnologías como:
-
-- Namespaces.
-- Cgroups.
-- Union File Systems.
+Para lograrlo usa tecnologias del kernel como namespaces y cgroups.
 
 ---
 
-# Conceptos clave de Docker
+## Conceptos clave de Docker
 
-## Imagen
+### Imagen
 
-Una imagen Docker es una plantilla inmutable que contiene:
-
-- El sistema base.
-- Librerías.
-- Dependencias.
-- Código de la aplicación.
-- Configuración necesaria para ejecutarla.
-
-Las imágenes se utilizan para crear contenedores.
+Una imagen es una plantilla de solo lectura que contiene todo lo necesario para crear un contenedor.
 
 Ejemplo:
+
 ```bash
 docker pull nginx
 ```
 
-## Contenedor
+### Contenedor
 
-Un contenedor es una instancia en ejecución de una imagen Docker.
-
-Puede:
-
-- Ejecutarse.
-- Detenerse.
-- Reiniciarse.
-- Eliminarse.
-
-Cada contenedor tiene un entorno aislado.
-
-## Dockerfile
-
-Un Dockerfile es un archivo de texto con instrucciones para construir una imagen Docker automáticamente.
+Un contenedor es una instancia en ejecucion de una imagen. Se puede iniciar, detener, reiniciar y eliminar.
 
 Ejemplo:
-```Dockerfile
-FROM node:20
-WORKDIR /app
-COPY . .
-RUN npm install
-CMD ["npm", "start"]
+
+```bash
+docker run nginx
 ```
 
-## Docker Hub
+### Dockerfile
 
-Docker Hub es un registro público de imágenes Docker.
+Un Dockerfile es un archivo con instrucciones para construir una imagen.
 
-Permite:
+Ejemplo:
 
-- Descargar imágenes.
-- Compartir imágenes.
-- Publicar imágenes propias.
+```dockerfile
+FROM python:3.11-alpine
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+CMD ["python", "main.py"]
+```
 
-Sitio oficial:
-https://hub.docker.com/
+### Docker Hub
 
-## Capa (Layer)
+Docker Hub es un repositorio publico de imagenes. Desde ahi se pueden descargar imagenes como `nginx`, `redis`, `python` o `mysql`.
 
-Las imágenes Docker están formadas por capas.
+### Capa o layer
 
-Cada instrucción del Dockerfile genera una nueva capa.
+Las imagenes Docker se construyen por capas. Cada instruccion del Dockerfile genera una capa nueva. Esto permite reutilizar cache y hacer builds mas rapidos.
 
-Ventajas:
+### Registry
 
-- Reutilización.
-- Caché eficiente.
-- Menor consumo de almacenamiento.
-
-## Registro (Registry)
-
-Un registry es un servicio donde se almacenan imágenes Docker.
-
-Puede ser:
-
-- Público.
-- Privado.
+Un registry es un lugar donde se guardan imagenes Docker. Puede ser publico o privado.
 
 Ejemplos:
 
@@ -135,87 +99,40 @@ Ejemplos:
 
 ---
 
-# Ciclo de vida de un contenedor
+## Ciclo de vida de un contenedor
 
-## 1. Creado (Created)
+1. `created`: el contenedor fue creado pero todavia no inicio.
+2. `running`: el contenedor esta ejecutandose.
+3. `paused`: el contenedor esta pausado temporalmente.
+4. `stopped`: el contenedor esta detenido.
+5. `removed`: el contenedor fue eliminado.
 
-El contenedor existe pero aún no está ejecutándose.
+Ejemplos:
 
-Ejemplo:
 ```bash
 docker create nginx
-```
-
-## 2. En ejecución (Running)
-
-El contenedor está activo y ejecutando procesos.
-
-Ejemplo:
-```bash
 docker start <contenedor>
-```
-
-## 3. Pausado (Paused)
-
-Los procesos del contenedor quedan temporalmente suspendidos.
-
-Ejemplo:
-```bash
-docker pause <contenedor>
-```
-
-## 4. Detenido (Stopped)
-
-El contenedor deja de ejecutarse, pero sigue existiendo.
-
-Ejemplo:
-```bash
 docker stop <contenedor>
-```
-
-## 5. Eliminado (Removed)
-
-El contenedor es borrado completamente.
-
-Ejemplo:
-```bash
 docker rm <contenedor>
 ```
 
-## ¿Qué ocurre con los datos cuando un contenedor se elimina?
+## Que pasa con los datos al eliminar un contenedor
 
-Cuando un contenedor se elimina:
+Si los datos estan dentro del contenedor, se pierden al eliminarlo. Para evitarlo se usan volumenes o bind mounts.
 
-- Los datos almacenados dentro del contenedor se pierden.
-- Los volúmenes Docker externos permanecen intactos.
-- Las imágenes utilizadas para crearlo no se eliminan automáticamente.
-
-Por eso, para datos persistentes se utilizan volúmenes.
+Los volumenes son la mejor opcion para datos importantes, porque Docker los guarda fuera del ciclo de vida del contenedor.
 
 ---
 
-# Relación entre Kernel, Docker Engine y Contenedores
-
-## Descripción del diagrama
+## Relacion entre Kernel, Docker Engine y contenedores
 
 ```text
-+--------------------------------------------------+
-|                 Sistema Operativo Host           |
-|--------------------------------------------------|
-|                     Kernel Linux                 |
-+--------------------------------------------------+
-|                  Docker Engine                   |
-|--------------------------------------------------|
-|  Contenedor A   |  Contenedor B  | Contenedor C |
-|-----------------|----------------|--------------|
-| App + Librerías | App + Librerías| App + Libr. |
-+--------------------------------------------------+
+Sistema operativo host
+└── Kernel
+    └── Docker Engine
+        ├── Contenedor backend
+        ├── Contenedor redis
+        └── Contenedor nginx
 ```
 
-## Explicación
-
-1. El sistema operativo host contiene el kernel Linux.
-2. Docker Engine se ejecuta sobre el sistema operativo host.
-3. Los contenedores utilizan Docker Engine para funcionar.
-4. Todos los contenedores comparten el mismo kernel del host.
-5. Cada contenedor mantiene aisladas sus aplicaciones, procesos y dependencias.
+El sistema operativo tiene el kernel. Docker Engine usa ese kernel para crear y administrar contenedores. Cada contenedor ejecuta su aplicacion aislada, pero todos comparten la base del host.

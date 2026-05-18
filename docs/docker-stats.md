@@ -1,66 +1,55 @@
-# Gestión avanzada y limpieza del entorno
+# Gestion avanzada y limpieza del entorno
 
-Durante esta práctica se utilizó Docker Compose para gestionar toda la infraestructura del proyecto.
+Durante la practica se uso Docker Compose para administrar toda la infraestructura.
 
-Para levantar todos los servicios se utilizó:
+## Levantar servicios
 
 ```bash
 docker compose up -d
 ```
 
-Con este comando se iniciaron el backend, Redis y NGINX en segundo plano.
+Este comando inicia los servicios en segundo plano:
 
-Para detener la infraestructura:
+- backend
+- redis
+- proxy NGINX
+
+## Detener servicios
 
 ```bash
 docker compose down
 ```
 
-También se practicó la reconstrucción de un único servicio sin afectar a los demás:
+Elimina los contenedores y la red creada por Compose. Si hubiera volumenes nombrados, se conservarian salvo que se use `-v`.
+
+## Reconstruir un servicio
 
 ```bash
 docker compose build backend
 ```
 
-Esto permite actualizar solo el backend sin reiniciar Redis o NGINX.
+Sirve para reconstruir solo el backend cuando cambia el Dockerfile, las dependencias o el codigo.
 
-Luego se escaló el servicio backend a múltiples instancias:
+## Escalar backend
 
 ```bash
 docker compose up -d --scale backend=3
 ```
 
-Con esto Docker creó varias instancias del backend para mejorar disponibilidad y distribución de carga.
+Este comando crea varias instancias del backend. En un caso real esto puede ayudar a distribuir carga, aunque la configuracion de puertos y proxy debe estar preparada para ese escenario.
 
-Para observar el uso de recursos en tiempo real se utilizó:
-
-```bash
-docker stats# Gestión avanzada y limpieza del entorno
-
-Docker Compose permite administrar fácilmente el ciclo de vida completo de una infraestructura.
-
-Algunos comandos importantes son:
-
-- `docker compose up -d`: levanta los servicios
-- `docker compose stop`: detiene contenedores
-- `docker compose start`: inicia contenedores existentes
-- `docker compose restart`: reinicia servicios
-- `docker compose down`: elimina contenedores y redes
-
-También es posible reconstruir solo un servicio específico usando:
+## Ver consumo de recursos
 
 ```bash
-docker compose build backend
+docker stats
 ```
 
-Este comando permitió visualizar consumo de CPU, memoria y red de cada contenedor.
+Permite ver CPU, memoria, red y disco usados por cada contenedor en tiempo real.
 
-Finalmente se realizó limpieza del sistema eliminando recursos no utilizados:
+## Limpieza del sistema
 
 ```bash
 docker system prune -a
 ```
 
-Este comando eliminó imágenes, cachés y contenedores innecesarios.
-
-Teniendo únicamente los contenedores e imágenes utilizados en esta práctica,  se liberaron entre 1 GB y 2 GB de espacio, principalmente debido a imágenes de Python, NGINX, Redis y caché de builds anteriores.
+Elimina contenedores detenidos, imagenes sin uso y cache de builds. Hay que usarlo con cuidado porque puede borrar imagenes que despues habra que descargar o construir otra vez.
