@@ -1,5 +1,10 @@
 __pycache__/
 *.pyc
 venv/
+.venv/
 .git/
 .env
+.env.*
+!.env.example
+certs/*.pem
+*.log
